@@ -96,6 +96,18 @@ Afin de paralléliser le produit matrice–vecteur, on décide dans un premier t
 - Paralléliser le code séquentiel `matvec.py` en veillant à ce que chaque tâche n’assemble que la partie de la matrice utile à sa somme partielle du produit matrice-vecteur. On s’assurera que toutes les tâches à la fin du programme contiennent le vecteur résultat complet.
 - Calculer le speed-up obtenu avec une telle approche
 
+nbp |   temps   | speed-up |
+:--:|:---------:|:--------:|
+1   | 0.0029    | 1
+2   | 0.0040    | 0.725
+3   | 0.0020    | 1.45
+4   | 0.0020    | 1.45
+5   | 0.0083    | 0.35
+6   | 0.0105    | 0.277
+7   | 0.0122    | 0.241
+8   | 0.0020    | 1.45
+
+
 ### b - Produit parallèle matrice-vecteur par ligne
 
 Afin de paralléliser le produit matrice–vecteur, on décide dans un deuxième temps de partitionner la matrice par un découpage par bloc de lignes. Chaque tâche contiendra $N_{\textrm{loc}}$ lignes de la matrice.
@@ -104,15 +116,55 @@ Afin de paralléliser le produit matrice–vecteur, on décide dans un deuxième
 - paralléliser le code séquentiel `matvec.py` en veillant à ce que chaque tâche n’assemble que la partie de la matrice utile à son produit matrice-vecteur partiel. On s’assurera que toutes les tâches à la fin du programme contiennent le vecteur résultat complet.
 - Calculer le speed-up obtenu avec une telle approche
 
+nbp |   temps   | speed-up |
+:--:|:---------:|:--------:|
+1   | 0.0029    | 1
+2   | 0.0020    | 1.45
+3   | 0.0015    | 1.93
+4   | 0.0038    | 0.75
+5   | 0.0022    | 1.3
+6   | 0.0077    | 0.38
+7   | 0.0100    | 0.29
+8   | 0.0040    | 0.73
+
+#### Conclusion de question 2
+<br>Il existe deux principales approches pour paralléliser le produit matrice-vecteur : la partition par colonnes et la partition par lignes.
+<br>**Partition par colonnes** : Chaque processus traite un bloc de colonnes de la matrice et doit effectuer une réduction globale (somme des résultats partiels). Cette méthode nécessite que chaque processus possède le vecteur u complet, mais entraîne un coût de communication plus élevé.
+<br>**Partition par lignes** : Chaque processus effectue directement le produit de certaines lignes avec le vecteur u. Le résultat est naturellement divisé entre les processus, ce qui réduit la communication et améliore l'efficacité en mémoire cache.
+<br>En général, la partition par lignes est préférable en calcul distribué, car elle minimise la communication et améliore les performances. 
+
 ## 3. Entraînement pour l'examen écrit
 
 Alice a parallélisé en partie un code sur machine à mémoire distribuée. Pour un jeu de données spécifiques, elle remarque que la partie qu’elle exécute en parallèle représente en temps de traitement 90% du temps d’exécution du programme en séquentiel.
 
 En utilisant la loi d’Amdhal, pouvez-vous prédire l’accélération maximale que pourra obtenir Alice avec son code (en considérant n ≫ 1) ?
 
+### Réponse 1:
+Alice observe que 90% du programme est parallélisable, donc $P=0.9$ et l’accélération maximale que l’on peut obtenir en supposant n≫1 (nombre de nœuds très grand) est donnée par la limite de la loi d’Amdahl :
+$S_{max} = \frac{1}{1-P} = 10$
+
 À votre avis, pour ce jeu de donné spécifique, quel nombre de nœuds de calcul semble-t-il raisonnable de prendre pour ne pas trop gaspiller de ressources CPU ?
+
+### Réponse 2：
+L’idée est de choisir un nombre de nœuds qui se rapproche de l’accélération maximale sans gaspiller de ressources. On cherche donc un n tel que l’accélération soit proche de 10 mais sans saturation excessive.
+<br>Selon la loi d’Amdahl: $S(n)=\frac{1}{(1-p)+\frac{p}{n}}$ ,donc ,
+- pour n=4: $S(4)=3.08$
+- pour n=8: $S(8)=4.71$
+- pour n=16: $S(16)=6.41$
+<br>Donc un choix raisonnable serait n = 4 à 8 nœuds, car au-delà de 8, le gain devient marginal et on gaspille des ressources.
+
+
 
 En effectuant son cacul sur son calculateur, Alice s’aperçoit qu’elle obtient une accélération maximale de quatre en augmentant le nombre de nœuds de calcul pour son jeu spécifique de données.
 
 En doublant la quantité de donnée à traiter, et en supposant la complexité de l’algorithme parallèle linéaire, quelle accélération maximale peut espérer Alice en utilisant la loi de Gustafson ?
+### Réponse 3：
+**La loi de Gustafson** corrige la limite de la loi d’Amdahl en supposant que lorsque plus de processeurs sont utilisés, la taille du problème augmente (au lieu de rester constante) :
+<br>$S(n)=n-(1-p)(n-1)$
+- pour n=4,$S(4)=4-(1-0.9)(4-1)=3.7$
+- pour n=8,$S(8)=8-(1-0.9)(8-1)=7.3$
+<br>On peut voir que lorsque n=8, n=4 double. 
+<br>Selon la loi de Gustafson, doubler la quantité de données signifie généralement que la quantité de calcul dans la partie parallèle augmente également, améliorant encore le taux d'accélération parallèle. Par conséquent, à mesure que l’échelle de calcul augmente, les avantages du calcul parallèle deviennent plus évidents.
+
+
 
