@@ -1,0 +1,85 @@
+\Chapter{chat2}
+L'objectif de ce travail est de comparer les performances d'un filtre de Kalman étendu (EKF) et d'un filtre sans parfum (UKF) appliqués au suivi d'un robot terrestre en déplacement sur un plan \(xOy\). Les questions abordent l'implémentation de chaque méthode et l'évaluation de leur précision.
+
+\section{Exercice 1 : Suivi d'un Robot par Mesure de Distance - Filtre de Kalman Étendu}
+
+\subsection{Question 1 : Linéarisation et Prédiction de l'État}
+Le vecteur d'entrée est noté \( u = \begin{bmatrix} V \\ \omega \end{bmatrix} \) et le vecteur d'état \( X_k = \begin{bmatrix} x_k \\ y_k \\ \varphi_k \end{bmatrix} \). L'équation d'état s'écrit :
+\begin{equation}
+    X_{k+1} = F(X_k, u, \Delta V_k, \Delta \omega_k),
+\end{equation}
+avec \( \Delta V_k \) et \( \Delta \omega_k \) des bruits blancs gaussiens de variances \( \sigma_V^2 \) et \( \sigma_\omega^2 \).
+
+En linéarisant autour de la valeur estimée \( \hat{X}_k \) et \( u_k \), la prédiction du mouvement est obtenue par :
+\begin{align}
+    \hat{x}_{k+1|k} &= \hat{x}_k + V T \cos \hat{\varphi}_k, \\
+    \hat{y}_{k+1|k} &= \hat{y}_k + V T \sin \hat{\varphi}_k, \\
+    \hat{\varphi}_{k+1|k} &= \hat{\varphi}_k + T \omega.
+\end{align}
+
+La prédiction de la covariance \( P_{k+1|k} \) est donnée par :
+\begin{equation}
+    P_{k+1|k} = \Phi_k P_k \Phi_k^T + \Gamma \text{Cov}_u \Gamma^T,
+\end{equation}
+où \( \Phi_k = \frac{\partial F}{\partial X} \big|_{X=\hat{X}_k} \) est la matrice jacobienne et \( \Gamma = \frac{\partial F}{\partial U} \big|_{U=u} \) la jacobienne par rapport à \( u \).
+
+\subsection{Question 2 : Correction par la Mesure}
+L'équation de mesure est donnée par :
+\begin{equation}
+    z_{k+1} = h(X_{k+1}) + w_k,
+\end{equation}
+où \( h \) représente la fonction de mesure.
+
+La matrice Jacobienne associée est \( H_k = \frac{\partial h}{\partial X} \big|_{X=\hat{X}_{k+1|k}} \). La correction de l'estimation avec la mesure est alors donnée par :
+\begin{equation}
+    \hat{X}_{k+1} = \hat{X}_{k+1|k} + K_{k+1} (z_{k+1} - H_k \hat{X}_{k+1|k}),
+\end{equation}
+où le gain de Kalman \( K_{k+1} \) est défini par :
+\begin{equation}
+    K_{k+1} = P_{k+1|k} H_{k+1}^T \left( H_{k+1} P_{k+1|k} H_{k+1}^T + W_k \right)^{-1}.
+\end{equation}
+
+\subsection{Question 3 : Implémentation des Équations}
+Pour implémenter ces équations, on utilisera les paramètres suivants :
+\begin{itemize}
+    \item \( T = 0.01 \), \( \sigma_V = 0.1 \), \( \sigma_\omega = 0.01 \), \( \sigma_w = 0.2 \),
+    \item \( V = 3 \, \text{m/s} \), \( \omega = \frac{2\pi}{3} \),
+    \item \( X_b = 2 \), \( Y_b = 5 \),
+    \item Conditions initiales : \( \hat{x}_0 = 0 \), \( \hat{y}_0 = 0 \), \( \hat{\varphi}_0 = 0 \), et \( P_0 = 10 I_3 \).
+\end{itemize}
+
+\subsection{Question 4 : Tracé de l'Évolution de la Variance et de l'Erreur Quadratique}
+Tracer l'évolution de la variance \( \text{trace}(P_k) \) au cours du temps et de l'erreur quadratique d'estimation \( e_k = \|\hat{X}_k - X_k\| \) où \( X_k \) est la vraie valeur de l'état fournie dans le fichier \texttt{etatvrai.txt}.
+
+\section{Exercice 2 : Suivi d'un Robot par Mesure de Distance - Filtre Sans Parfum}
+
+\subsection{Question 1 : Calcul des Points Sigma}
+Pour le filtre sans parfum, on choisit \( \lambda = 0.1 \). Les pondérations sont données par :
+\begin{align}
+    \omega_m^0 &= \frac{\lambda}{n + \lambda}, \quad \omega_c^0 = \frac{\lambda}{n + \lambda} + 1 - \alpha^2 + \beta, \\
+    \omega_m^i &= \omega_c^i = \frac{1}{2(n + \lambda)}, \quad \text{pour } i = 1, \dots, 2n.
+\end{align}
+
+\subsection{Question 2 : Propagation des Points Sigma}
+Les points sigma sont propagés à travers la fonction \( f \) pour obtenir :
+\begin{align}
+    \hat{x}_{k+1|k} &= \sum_{i=0}^{2n} \omega_m^i f(\zeta_i), \\
+    P_{k+1|k} &= \sum_{i=0}^{2n} \omega_c^i (f(\zeta_i) - \hat{x}_{k+1|k})(f(\zeta_i) - \hat{x}_{k+1|k})^T + \Gamma \text{Cov}_u \Gamma^T.
+\end{align}
+
+\subsection{Question 3 : Correction par la Mesure}
+Le gain de Kalman est calculé à partir de la mesure prédite et la covariance de la mesure :
+\begin{align}
+    \hat{z} &= \sum_{i=0}^{2n} \omega_m^i h(\zeta_i), \\
+    K &= T \cdot P_c^{-1},
+\end{align}
+où \( T \) est la covariance croisée entre les états et les mesures. La mise à jour est donnée par :
+\begin{align}
+    \hat{x}_{k+1} &= \hat{x}_{k+1|k} + K (z - \hat{z}), \\
+    P_{k+1} &= P_{k+1|k} - K P_c K^T.
+\end{align}
+
+\subsection{Question 4 : Comparaison des Performances}
+La comparaison des filtres EKF et UKF se fait en traçant l'évolution de la variance \( \text{trace}(P_k) \) et de l'erreur quadratique d'estimation \( e_k = \|\hat{X}_k - X_k\| \) au cours du temps, où \( X_k \) est la valeur réelle de l'état.
+
+

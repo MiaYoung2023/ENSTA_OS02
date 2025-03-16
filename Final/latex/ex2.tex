@@ -1,0 +1,29 @@
+\chapter{Parallélisation avec MPI}
+\section{Description de l'implimentation}
+Sur la base de la première étape(multi-threading), nous utilisons MPI pour paralléliser plusieurs processus.
+\par
+Nous avons principalement modifié la fonction principale du fichier \texttt{simulation.cpp}. 
+Ici, le processus 0 est responsable de la visualisation. 
+Il effectue d'abord \texttt{MPI\_Recv}, puis met à jour l'affichage, reçoit la carte d'incendie des autres processus via une boucle, puis utilise \texttt{Displayer} pour le rendu. 
+Tandis que les autres processus se contentent de calculer, \texttt{simu.update()} calcule le nouvel état d'incendie et \texttt{MPI\_Send} envoie la carte d'incendie au rang 0.
+\section{Analyse de résultat}
+Avec commande \texttt{mpiexec -n 2 .\textbackslash simulation -n -s} , nous obtenons les résultats suivants:
+\begin{table}[h]
+    \centering
+    \resizebox{0.8\textwidth}{!}{
+        \begin{tabular}{|c|c|c|c|c|} 
+            \hline 
+              & n processus = 1 & n processus = 2 \\
+            \hline
+            Temps moyen de chaque avancement (ms) & 37.8 & 38.3\\
+            Temps total (s) & 104.6 & 104.1\\
+            speedup de temps moyen & 1.00 & 0.98\\
+            speedup de temps total & 1.00 & 1.005\\
+            \hline
+            \end{tabular}
+    }
+    \caption{Résultat de la parallélisation avec MPI en cas de 4 threads}
+    \label{tab:mytable}
+\end{table}
+\par
+Nous constatons que le multiprocessus MPI optimise le temps global, mais le temps d'avancement moyen ne s'améliore pas significativement avec l'augmentation du nombre de processus. Cela peut s'expliquer par le coût de communication entre les processus.

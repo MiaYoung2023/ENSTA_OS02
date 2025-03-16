@@ -1,0 +1,9 @@
+\babel@toc {french}{}\relax 
+\contentsline {chapter}{\numberline {1}Analyse des performances et parallélisation}{2}{chapter.1}%
+\contentsline {section}{\numberline {1.1}L'information de base de l'ordinateur}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Le temps moyen de l'exécution}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Parallélisation avec OpenMP}{3}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Parallélisation avec MPI}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Description de l'implimentation}{4}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Analyse de résultat}{4}{section.2.2}%
+\contentsline {chapter}{\numberline {3}Optimisation de la parallélisation}{5}{chapter.3}%
